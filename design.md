@@ -14,13 +14,13 @@ Login screen - This is the initial login screen that the user sees when they ope
 
 ![Available tournaments](https://i.imgur.com/nXL5AIA.png)
 
-Available tournaments - this screen contains a list of available tournaments. Each tournament shows basic details, as well as an indicator if the user is playing in or hosting the tournament. The user is able to sort by date ascending, descending, or put the tournaments they are participating in or hosting at the top. From here, the user is able to go to the tournament creation screen via the top right button or select a tournament to view more details.
+Available tournaments - this screen contains a list of available tournaments. Each tournament shows basic details, as well as an indicator if the user is playing in, has played in, or is hosting the tournament. The user is able to sort by date ascending, descending, or put the tournaments they are participating in or hosting at the top. From here, the user is able to go to the tournament creation screen via the top right button or select a tournament to view more details.
 
 
 
 ![Tournament creation](https://i.imgur.com/yjCSBzx.png)
 
-Tournament creation - The user can fill out the details of the tournament and create the tournament for players to enter. Once created, the user is taken to the “my tournaments” page, where the newly-created tournament should appear.
+Tournament creation - The user can fill out the details of the tournament and create the tournament for players to enter. Once created, the user is taken to the “available tournaments” page, where the newly-created tournament should appear.
 
 ![Tournament details](https://i.imgur.com/Kzz9tfd.png)
 
@@ -52,17 +52,66 @@ Course objects have the following attributes:
 * ID
 * Name
 * Location
-* List of par scores for each hole
+* List of pars for each hole
 
-The Android application communicates with the datastore via a HTTP server set up with Google App Engine, which acts as an intermediary between the application and the datastore. The application will send HTTP messages to the server to either request data from the datastore or modify data within the datastore, and the server will retrieve or modify data in the datastore accordingly. Datastore does have an API that can be used to access the data directly, which can potentially be used as an alternative to the Google App Engine server.
+The Android application communicates with the datastore via a stateless HTTP server set up with Google App Engine, which acts as an intermediary between the application and the datastore. The application will send HTTP messages to the server to either request data from the datastore or modify data within the datastore, and the server will retrieve or modify data in the datastore accordingly. Datastore does have an API that can be used to access the data directly, which can potentially be used as an alternative to the Google App Engine server. In a scenario with a large amount of traffic, App Engine and Datastore should be able to scale up/out automatically.
 
 Retrieve tournaments:
 * GET /tournaments
 * Returns a list of all tournament objects stored in the datastore.
 
+```
+{
+    tournaments:[
+    {
+        name: "tournament1",
+        id: 154,
+        host: "alex",
+        date: "01/01/2020",
+        time: "10:00 AM",
+        fee: 12.54,
+        courseid: 3686,
+        scores:[
+        {
+            player: "bob",
+            score: [-1, 2, 1, 0, 1, -1, 1, 0, 1, 0, 1, 2, -1, 0, 1, 0, 0, 1]
+        },
+        {
+            player: "jacob",
+            score: [-1, 3, 1, 2, 1, 0, 1, 0, -1, 0, 1, 2, 0, 0, 0, 0, 0, 1]
+        }
+        ]
+    }
+    ]
+}
+```
+
 Retrieve single tournament:
 * GET /tournaments/{tournament ID}
 * Returns a tournament object corresponding to the requested ID
+
+```
+{
+    name: "tournament1",
+    id: 154,
+    host: "alex",
+    date: "01/01/2020",
+    time: "10:00 AM",
+    fee: 12.54,
+    courseid: 3686,
+    scores:[
+    {
+        player: "bob",
+        score: [-1, 2, 1, 0, 1, -1, 1, 0, 1, 0, 1, 2, -1, 0, 1, 0, 0, 1]
+    },
+    {
+        player: "jacob",
+        score: [-1, 3, 1, 2, 1, 0, 1, 0, -1, 0, 1, 2, 0, 0, 0, 0, 0, 1]
+    }
+    ]
+}
+```
+
 
 Create tournament:
 * POST /tournaments
@@ -84,9 +133,34 @@ Retrieve user:
 * GET /users
 * Returns a list of users stored in the datastore.
 
+```
+{
+    users:[
+    {
+        username: "alex",
+        hosting: [154],
+        playing: []
+    },
+    {
+        username: "bob",
+        hosting: [],
+        playing: [154]
+    }
+    ]
+}
+```
+
 Retrieve single user:
 * GET /users/{username}
 * Returns the corresponding user
+
+```
+{
+    username: "alex",
+    hosting: [154],
+    playing: []
+}
+```
 
 Create user:
 * POST /users
@@ -106,9 +180,38 @@ Retrieve courses:
 * GET /courses
 * Returns a list of courses
 
+```
+{
+    courses:[
+    {
+        name: "course1",
+        id: 154,
+        location: "1234 example way",
+        par: [3,4,3,5,4,5,4,3,4,5,4,3,4,3,3,4,5,5]
+    },
+    {
+        name: "course2",
+        id: 157,
+        location: "4321 example drive",
+        par: [5,4,5,4,3,4,5,4,3,3,4,4,4,4,5,3,4,3]
+    }
+    ]
+}
+```
+
 Retrieve single course:
 * GET /courses/{course ID}
 * Returns the corresponding course
+
+```
+courses:[
+{
+    name: "course1",
+    id: 154,
+    location: "1234 example way",
+    par: [3,4,3,5,4,5,4,3,4,5,4,3,4,3,3,4,5,5]
+}
+```
 
 Create course:
 * POST /courses

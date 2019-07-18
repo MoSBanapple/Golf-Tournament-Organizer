@@ -23,20 +23,18 @@ import json
 # called `app` in `main.py`.
 app = flask.Flask(__name__)
 
-def getID():
-    q = client.query(kind="Tournament")
-    results = list(q.fetch())
-    currentID = 0
-    for t in results:
-        if int(t["id"]) >= currentID:
-            currentID = int(t["id"]) + 1
-    return currentID
+def getTournamentID():
+    key = client.key('TournamentID', 'id')
+    task = client.get(key)
+    idNum = task["idNum"]
+    task["idNum"] = idNum + 1
+    client.put(task)
+    return idNum
 
 
 @app.route("/")
 def hello():
-    """Return a friendly HTTP greeting."""
-    return 'Hello World!'
+    return 'N/A'
     
     
 @app.route("/tournaments", methods=['GET', 'POST'])
@@ -54,7 +52,7 @@ def tournaments():
         fee = float(flask.request.form.get("fee"))
         courseid = int(flask.request.form.get("courseid"))
         scores = flask.request.form.getlist('scores')
-        id = getID()
+        id = getTournamentID()
         ckey = client.key('Tournament', str(id))
         task = datastore.Entity(key=ckey)
         task.update({
@@ -202,37 +200,7 @@ def courseSpec(id):
         return "200 OK"
     return "should not get here"
 
-@app.route("/absent", methods=['GET','POST','PUT','DELETE'])
-def absent():
-    
-    complete_key = client.key('Task', 'sample_task')
-    task = datastore.Entity(key=complete_key)
-    task.update({
-        'paramA' : 4,
-        'paramB' : 5,
-        'listParam' : ["abc"]
-    })
-    client.put(task)
-    
-    """
-    with client.transaction():
-        key = client.key('Task', 'sample_task')
-        task = client.get(key)
-        dict = {}
-        dict["test"] = task['listParam']
-        return json.dumps(task)
-    """
-    q = client.query(kind="Task")
-    results = list(q.fetch())
-    dict = {"list":results}
-    return str(flask.request.args.getlist("testArg"))
 
-@app.route("/absent/<abs>")
-def absent2(abs):
-    testStr = "testy"
-    if abs == testStr:
-        return "ablong"
-    return "absent " + abs
     
 
 if __name__ == '__main__':
